@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SkyNova Taiwan Flight Simulator V28</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#06111d;color:#eaf5ff;font-family:Arial,"Noto Sans TC",sans-serif;overflow:hidden}
+#app{height:100vh;display:flex;flex-direction:column}
+.top{height:58px;background:linear-gradient(90deg,#071a2c,#0b3354);display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #2474ad}
+.logo{font-weight:800;font-size:20px}.sub{font-size:12px;color:#9ed7ff}
+.main{flex:1;display:grid;grid-template-columns:1fr 330px;gap:10px;padding:10px;min-height:0}
+.cockpit{position:relative;border:1px solid #246b9e;border-radius:12px;background:radial-gradient(circle at 50% 35%,#173a55 0,#081522 50%,#02070b 100%);overflow:hidden}
+.windshield{position:absolute;left:7%;right:7%;top:8%;height:31%;border:3px solid #35566d;border-bottom-color:#142c3b;border-radius:48% 48% 15% 15%;background:linear-gradient(180deg,#102c48 0%,#1b4562 48%,#09131b 100%);box-shadow:inset 0 0 50px #0008}
+.horizon{position:absolute;left:0;right:0;top:55%;height:2px;background:#64d5ff;opacity:.7}
+.city{position:absolute;bottom:0;left:0;right:0;height:48%;background:linear-gradient(180deg,transparent 0,#07121c 50%),repeating-linear-gradient(90deg,#07111a 0 28px,#0b1b27 29px 48px);clip-path:polygon(0 65%,5% 54%,9% 69%,14% 46%,19% 66%,23% 52%,28% 70%,33% 44%,39% 66%,44% 50%,49% 69%,54% 43%,59% 65%,64% 48%,69% 68%,75% 42%,80% 65%,86% 49%,91% 67%,96% 45%,100% 62%,100% 100%,0 100%)}
+.panel{position:absolute;left:5%;right:5%;bottom:4%;height:44%;display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:8px}
+.display,.mcp,.controls{background:linear-gradient(180deg,#101d27,#050a0f);border:1px solid #2c526c;border-radius:9px;padding:8px;box-shadow:0 0 18px #0008}
+.display{display:grid;grid-template-columns:1fr 1fr;gap:6px}.screen{background:#06151c;border:1px solid #1f7180;border-radius:6px;padding:6px;font-family:monospace;font-size:12px;color:#63f2b2}
+.mcp{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;align-content:start}.mcp h3{grid-column:1/-1;margin:0;font-size:12px}.knob{background:#111c25;border:1px solid #42657a;color:#fff;border-radius:5px;padding:7px 3px;text-align:center;font-size:11px;cursor:pointer}.knob:hover{background:#183c55}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;align-content:start}.btn{background:#142431;border:1px solid #3a657e;color:#fff;border-radius:5px;padding:8px 3px;font-size:11px;cursor:pointer}.btn:hover{background:#1b4b6b}.btn.on{border-color:#4ce09c;color:#8fffc8}
+.side{display:flex;flex-direction:column;gap:8px;min-height:0}
+.card{background:#091b2a;border:1px solid #235a7c;border-radius:10px;padding:10px}
+.card h2{font-size:14px;margin:0 0 8px}.status{font-family:monospace;font-size:12px;line-height:1.7;color:#bde8ff}
+.guide{flex:1;overflow:auto}.guide p{font-size:12px;line-height:1.5}.tip{background:#0b2e46;border-left:4px solid #38cfff;padding:10px;border-radius:4px;font-size:12px;line-height:1.6}.flowline{font-size:12px;line-height:1.7;color:#aee8ff}
+.footer{height:34px;background:#071724;border-top:1px solid #204761;padding:8px 14px;font-size:11px;color:#8fb5c9;display:flex;justify-content:space-between}
+kbd{background:#172d3c;border:1px solid #42657a;border-radius:4px;padding:1px 5px}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:5}.modal.show{display:flex}
+.modalbox{width:min(620px,92vw);max-height:80vh;overflow:auto;background:#081a28;border:1px solid #3984b7;border-radius:12px;padding:18px;box-shadow:0 20px 60px #000c}
+.modalbox h2{margin-top:0;color:#7ddcff}.lesson{padding:10px;margin:7px 0;background:#0d293c;border-radius:7px;border:1px solid #234d65}
+.lesson b{color:#8fffc8}.close{float:right;cursor:pointer;background:#173b53;border:1px solid #47718b;color:#fff;padding:6px 10px;border-radius:5px}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="top">
+<div><div class="logo">✈ SkyNova Taiwan Flight Simulator V28</div><div class="sub">737 駕駛艙教學流程強化版</div></div>
+<div><span id="phase">COLD & DARK</span>　<button class="btn" onclick="openHelp()">📘 教學</button></div>
+</div>
+<div style="position:absolute;left:14px;right:14px;top:68px;z-index:2;background:#061c2bdf;border:1px solid #2679aa;border-radius:8px;padding:7px 10px;font-size:11px;color:#bcecff;text-align:center;box-shadow:0 0 14px #0008">
+起飛流程　BAT → GPU → APU → APU GEN → BLEED → PACKS → ENG 1 START → ENG 2 START → PUSHBACK → TAXI → F5 → GEAR DN → THR 80% → V1 → ROTATE → W 抬頭 → Positive Rate → GEAR UP → CLIMB → CMD / LNAV / VNAV
+</div><div class="main">
+<div class="cockpit" id="cockpit">
+<div class="windshield"></div><div class="horizon"></div><div class="city"></div>
+<div class="panel">
+<div class="display">
+<div class="screen">PFD<br>IAS <span id="ias">0</span><br>ALT <span id="alt">0</span><br>VS <span id="vs">0</span><br>HDG <span id="hdg">090</span></div>
+<div class="screen">ND<br>ROUTE TPE → KIX<br>LNAV <span id="lnav">OFF</span><br>VNAV <span id="vnav">OFF</span></div>
+</div>
+<div class="mcp">
+<h3>MCP 自動飛行</h3>
+<button class="knob" onclick="setIAS()">IAS SET</button><button class="knob" onclick="setHDG()">HDG SET</button><button class="knob" onclick="setALT()">ALT SET</button><button class="knob" onclick="setVS()">V/S SET</button>
+<button class="knob" onclick="toggle('lnav')">LNAV</button><button class="knob" onclick="toggle('vnav')">VNAV</button><button class="knob" onclick="toggle('cmd')">CMD</button><button class="knob" onclick="toggle('app')">APP</button>
+</div>
+<div class="controls">
+<button class="btn" id="bat" onclick="power('BAT')">BAT</button><button class="btn" id="gpu" onclick="power('GPU')">GPU</button><button class="btn" id="apu" onclick="power('APU')">APU</button>
+<button class="btn" id="apugen" onclick="power('APU GEN')">APU GEN</button><button class="btn" id="bleed" onclick="power('BLEED')">BLEED</button><button class="btn" id="packs" onclick="power('PACKS')">PACKS</button>
+<button class="btn" onclick="engine(1)">ENG 1 START</button><button class="btn" onclick="engine(2)">ENG 2 START</button><button class="btn" onclick="stage('PUSHBACK')">PUSHBACK</button>
+<button class="btn" onclick="stage('TAXI')">TAXI</button><button class="btn" onclick="flaps(5)">F5</button><button class="btn" onclick="gear('UP')">GEAR UP</button>
+<button class="btn" onclick="gear('DN')">GEAR DN</button><button class="btn" onclick="takeoff()">THR 80%</button><button class="btn" onclick="pause()">⏸ 暫停</button>
+</div>
+</div>
+</div>
+<div class="side">
+<div class="card"><h2>🧑‍✈️ 教學教練</h2><div class="status" id="coach">請先按「教學」開始。<br>系統會告訴你下一步該做什麼。</div></div>
+<div class="card"><h2>📋 飛行狀態</h2><div class="status" id="status">POWER: OFF<br>APU: OFF<br>ENG 1: OFF<br>ENG 2: OFF<br>GEAR: DN<br>FLAPS: 0<br>THR: 0%</div></div>
+<div class="card guide">
+<h2>🎓 飛行流程</h2>
+<div id="task" class="tip">建立電源 → 啟動 APU → 啟動發動機 → 推回 → 滑行 → 起飛 → 爬升</div>
+<p id="flowHint">目前先建立電源。按下 BAT 後，教學會告訴你下一個操作。</p>
+</div>
+</div>
+</div>
+<div class="footer"><span>V28 教學模式｜低負載方向</span><span>W/S Pitch　A/D Roll　Q/E Heading　Space Pause</span></div>
+</div>
+
+<div class="modal" id="help">
+<div class="modalbox"><button class="close" onclick="closeHelp()">關閉</button>
+<h2>📘 V28 737 駕駛艙教學</h2>
+<div class="lesson"><b>1. 冷艙</b><br>BAT → GPU → APU → APU GEN → BLEED → PACKS</div>
+<div class="lesson"><b>2. 發動機</b><br>ENG 1 START → ENG 2 START</div>
+<div class="lesson"><b>3. 推回與滑行</b><br>PUSHBACK → TAXI → F5 → GEAR DN</div>
+<div class="lesson"><b>4. 起飛</b><br>THR 80% → 加速 → Rotate → W → Positive Rate → GEAR UP</div>
+<div class="lesson"><b>5. 爬升</b><br>設定 IAS / ALT / V/S，視需要開 CMD、LNAV、VNAV</div>
+<div class="lesson"><b>6. 進場</b><br>APP → ILS 監控 → GEAR DN → 襟翼設定 → 穩定進場</div>
+</div></div>
+
+<script>
+let state={bat:false,gpu:false,apu:false,apugen:false,bleed:false,packs:false,e1:false,e2:false,gear:"DN",flaps:0,thr:0,ias:0,alt:0,vs:0,hdg:90,lnav:false,vnav:false,cmd:false,app:false,paused:false};
+const tasks=[
+"建立電源：請按 BAT。",
+"接上地面電源：請按 GPU。",
+"啟動 APU：請按 APU。",
+"讓 APU 發電：請按 APU GEN。",
+"開啟引氣：請按 BLEED。",
+"開啟空調／增壓：請按 PACKS。",
+"啟動 1 號發動機：請按 ENG 1 START。",
+"啟動 2 號發動機：請按 ENG 2 START。",
+"開始推出停機位：請按 PUSHBACK。",
+"開始滑行：請按 TAXI。",
+"起飛前設定：F5，並確認 GEAR DN。",
+"開始起飛加速：請按 THR 80%。",
+"接近起飛速度：準備 Rotate，使用 W 平順抬頭。",
+"Positive Rate：確認爬升後按 GEAR UP。",
+"爬升：設定 MCP，視需要啟用 CMD、LNAV、VNAV。"
+];
+let ti=0;
+function say(t){try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="zh-TW";u.rate=.95;speechSynthesis.speak(u)}catch(e){}}
+function setTask(i){
+ti=Math.max(0,Math.min(tasks.length-1,i));
+document.getElementById("task").textContent=tasks[ti];
+document.getElementById("coach").innerHTML=tasks[ti]+"<br><br>完成目前操作後，教學會自然銜接下一個飛行流程。";
+if(document.getElementById("flowHint")) document.getElementById("flowHint").textContent="目前操作："+tasks[ti];
+say(tasks[ti]);
+}
+function openHelp(){document.getElementById("help").classList.add("show")}
+function closeHelp(){document.getElementById("help").classList.remove("show")}
+function update(){
+document.getElementById("phase").textContent=state.e1&&state.e2?(state.thr>0?"TAKEOFF / CLIMB":"ENGINE RUN"):(state.apu?"APU READY":"COLD & DARK");
+document.getElementById("ias").textContent=Math.round(state.ias);document.getElementById("alt").textContent=Math.round(state.alt);document.getElementById("vs").textContent=Math.round(state.vs);document.getElementById("hdg").textContent=String(Math.round(state.hdg)).padStart(3,"0");
+document.getElementById("lnav").textContent=state.lnav?"ON":"OFF";document.getElementById("vnav").textContent=state.vnav?"ON":"OFF";
+document.getElementById("status").innerHTML=`POWER: ${state.bat||state.gpu?"ON":"OFF"}<br>APU: ${state.apu?"ON":"OFF"}<br>ENG 1: ${state.e1?"RUN":"OFF"}<br>ENG 2: ${state.e2?"RUN":"OFF"}<br>GEAR: ${state.gear}<br>FLAPS: ${state.flaps}<br>THR: ${state.thr}%<br>CMD: ${state.cmd?"ON":"OFF"} / APP: ${state.app?"ON":"OFF"}`;
+}
+function power(x){
+if(x==="BAT")state.bat=true;if(x==="GPU")state.gpu=true;
+if(x==="APU"&&(state.bat||state.gpu))state.apu=true;
+if(x==="APU GEN"&&state.apu)state.apugen=true;
+if(x==="BLEED"&&state.apugen)state.bleed=true;
+if(x==="PACKS"&&state.bleed)state.packs=true;
+update();if(ti<6 && ((ti===0&&x==="BAT")||(ti===1&&x==="GPU")||(ti===2&&x==="APU")||(ti===3&&x==="APU GEN")||(ti===4&&x==="BLEED")||(ti===5&&x==="PACKS")))setTask(ti+1);
+}
+function engine(n){if(state.apu&&state.apugen&&state.bleed){if(n===1)state.e1=true;if(n===2&&state.e1)state.e2=true;update();if((n===1&&ti===6)||(n===2&&ti===7))setTask(ti+1)}else{say("請先完成電源與引氣設定");}}
+function stage(x){if(x==="PUSHBACK"&&state.e1&&state.e2){update();if(ti===8)setTask(9)}else if(x==="TAXI"&&state.e1&&state.e2){update();if(ti===9)setTask(10)}else say("請先完成前一個步驟");}
+function flaps(n){state.flaps=n;update();if(ti===10&&n===5)setTask(11)}
+function gear(x){state.gear=x;update();if(ti===10&&x==="DN")setTask(11);if(ti===13&&x==="UP")setTask(14)}
+function takeoff(){if(state.e1&&state.e2){state.thr=80;state.ias=105;state.vs=0;update();if(ti===11)setTask(12);setTimeout(()=>{if(state.thr){state.ias=145;state.vs=600;state.alt=1200;update();}},1600)}}
+function toggle(k){state[k]=!state[k];update();if(k==="cmd"&&state.cmd&&ti===14)setTask(15)}
+function setIAS(){say("請輸入目標速度，例如 145");let v=prompt("IAS 目標速度", "145");if(v)document.getElementById("coach").innerHTML="IAS 已設定為 "+v+" knots。"}
+function setHDG(){let v=prompt("HDG 目標航向","090");if(v)state.hdg=Number(v)||90;update()}
+function setALT(){let v=prompt("ALT 目標高度","10000");if(v){state.alt=Number(v)||10000;update()}}
+function setVS(){let v=prompt("V/S 垂直速度","1800");if(v)state.vs=Number(v)||1800;update()}
+function pause(){state.paused=!state.paused;say(state.paused?"模擬已暫停":"模擬繼續");}
+document.addEventListener("keydown",e=>{
+if(e.code==="Space"){e.preventDefault();pause()}
+if(state.paused)return;
+if(e.key==="w"||e.key==="W"){state.vs+=200;state.alt+=100}
+if(e.key==="s"||e.key==="S"){state.vs-=200;state.alt=Math.max(0,state.alt-100)}
+if(e.key==="a"||e.key==="A")state.hdg=Math.max(0,state.hdg-2);
+if(e.key==="d"||e.key==="D")state.hdg=Math.min(359,state.hdg+2);
+if(e.key==="q"||e.key==="Q")state.hdg=Math.max(0,state.hdg-5);
+if(e.key==="e"||e.key==="E")state.hdg=Math.min(359,state.hdg+5);
+update();
+});
+update();setTask(0);
+</script>
+</body>
+</html>
